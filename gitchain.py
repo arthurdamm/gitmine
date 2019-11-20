@@ -13,6 +13,7 @@ import zlib
 
 GIT_STORE = '.git/objects/'
 
+
 def make_commit(message):
     '''Composes commits with given msg in a loop until it finds one with
     6 preceding 0's'''
@@ -41,14 +42,18 @@ def make_commit(message):
     print(sha1)
     write_git_object(sha1, zlib_compress(store))
     hard_reset_to_generated_commit(sha1)
-    
+
+
 def hard_reset_to_generated_commit(sha1):
     '''Hard resets git staging area to generated commit state for pushing'''
-    subprocess.check_output(['git', 'reset', '--hard', sha1]).decode('utf-8')[:-1]
+    subprocess.check_output(
+        ['git', 'reset', '--hard', sha1]).decode('utf-8')[:-1]
+
 
 def zlib_compress(store):
     '''Compresses object data via zlib'''
     return zlib.compress(bytes(store, 'utf-8'))
+
 
 def write_git_object(sha1, compressed):
     '''Writes data associated with sha1 to git object store'''
@@ -61,24 +66,32 @@ def write_git_object(sha1, compressed):
     with open(fullname, 'wb') as f:
         f.write(compressed)
 
+
 def make_sha1(commit):
     '''Encodes commit data as sha1 hex string'''
     return sha1(commit.encode('utf-8')).hexdigest()
 
+
 def get_tree_and_parent_hashes():
     '''Gets tree_hash representing repo file tree and tries parent_hash'''
-    tree_hash = subprocess.check_output(['git', 'write-tree']).decode('utf-8')[:-1]
-    parent_hash = subprocess.run(['git', 'rev-parse', 'HEAD'],
-        stderr=subprocess.PIPE, stdout=subprocess.PIPE).stdout.decode('utf-8')[:-1]
+    tree_hash = subprocess.check_output(
+        ['git', 'write-tree']).decode('utf-8')[:-1]
+    parent_hash = subprocess.run(
+        ['git', 'rev-parse', 'HEAD'], stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE).stdout.decode('utf-8')[:-1]
     if len(parent_hash) != 40:
         parent_hash = None
     return (tree_hash, parent_hash)
 
+
 def get_user_name_and_email():
     '''Tries to get user name/email via git config'''
-    user_name = subprocess.check_output(['git', 'config', 'user.name']).decode('utf-8')[:-1]
-    user_email = subprocess.check_output(['git', 'config', 'user.email']).decode('utf-8')[:-1]
+    user_name = subprocess.check_output(
+        ['git', 'config', 'user.name']).decode('utf-8')[:-1]
+    user_email = subprocess.check_output(
+        ['git', 'config', 'user.email']).decode('utf-8')[:-1]
     return (user_name, user_email)
+
 
 if __name__ == '__main__':
     if len(sys.argv) < 3 or sys.argv[1] not in ['add', 'commit']:
