@@ -70,6 +70,8 @@ def get_tree_and_parent_hashes():
     tree_hash = subprocess.check_output(['git', 'write-tree']).decode('utf-8')[:-1]
     parent_hash = subprocess.run(['git', 'rev-parse', 'HEAD'],
         stderr=subprocess.PIPE, stdout=subprocess.PIPE).stdout.decode('utf-8')[:-1]
+    if len(parent_hash) != 40:
+        parent_hash = None
     return (tree_hash, parent_hash)
 
 def get_user_name_and_email():
