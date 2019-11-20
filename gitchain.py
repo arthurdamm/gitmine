@@ -1,5 +1,8 @@
 #!/usr/bin/env python3.6
-'''Gitmines commit hashes starting with 000000'''
+'''
+Gitmines commit hashes starting with 000000
+USAGE: gitchain <add|commit> <args>
+'''
 
 from datetime import datetime
 from hashlib import sha1
@@ -35,7 +38,6 @@ def make_commit(message):
         store = header + commit
         sha1 = make_sha1(store)
         nonce += 1
-        #if nonce > 2: break
     print(sha1)
     write_git_object(sha1, zlib_compress(store))
     hard_reset_to_generated_commit(sha1)
@@ -66,22 +68,14 @@ def make_sha1(commit):
 def get_tree_and_parent_hashes():
     '''Gets tree_hash representing repo file tree and tries parent_hash'''
     tree_hash = subprocess.check_output(['git', 'write-tree']).decode('utf-8')[:-1]
-    try:
-        parent_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('utf-8')[:-1]
-    except subprocess.CalledProcessError:
-        parent_hash = None
+    parent_hash = subprocess.run(['git', 'rev-parse', 'HEAD'],
+        stderr=subprocess.PIPE, stdout=subprocess.PIPE).stdout.decode('utf-8')[:-1]
     return (tree_hash, parent_hash)
 
 def get_user_name_and_email():
-    '''Tries to get user name/email via git config or default data'''
-    try:
-        user_name = subprocess.check_output(['git', 'config', 'user.name']).decode('utf-8')[:-1]
-    except subprocess.CalledProcessError:
-        user_name = 'Dan Kozlowski'
-    try:
-        user_email = subprocess.check_output(['git', 'config', 'user.email']).decode('utf-8')[:-1]
-    except subprocess.CalledProcessError:
-        user_email = 'koz@planetscale.com'
+    '''Tries to get user name/email via git config'''
+    user_name = subprocess.check_output(['git', 'config', 'user.name']).decode('utf-8')[:-1]
+    user_email = subprocess.check_output(['git', 'config', 'user.email']).decode('utf-8')[:-1]
     return (user_name, user_email)
 
 if __name__ == '__main__':
@@ -89,12 +83,9 @@ if __name__ == '__main__':
         print('USAGE: gitchain <add|commit> <args>')
         exit(1)
     if sys.argv[1] == 'commit':
-        if len(sys.argv) > 4 and sys.argv[2] == '-m':
+        if len(sys.argv) > 3 and sys.argv[2] == '-m':
             make_commit(sys.argv[3])
         else:
             print('USAGE: gitchain commit -m <message>')
     elif sys.argv[1] == 'add':
-        try:
-            subprocess.check_output(['git', 'add'] + sys.argv[2:])
-        except Exception:
-            Pass
+        subprocess.check_output(['git', 'add'] + sys.argv[2:])
